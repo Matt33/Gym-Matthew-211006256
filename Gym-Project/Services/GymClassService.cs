@@ -47,6 +47,20 @@ public class GymClassService : IGymClassService
         };
         _context.GymClasses.Add(gymClass);
         await _context.SaveChangesAsync();
+
+        // Automatically create a default session for the new class
+        var defaultSession = new ClassSession
+        {
+            GymClassId = gymClass.Id,
+            SessionDate = DateTime.UtcNow.AddDays(1).Date, // Tomorrow
+            StartTime = "10:00",
+            EndTime = "11:00",
+            Location = "Main Gym",
+            MaxCapacity = 20,
+            CreatedAt = DateTime.UtcNow
+        };
+        _context.ClassSessions.Add(defaultSession);
+        await _context.SaveChangesAsync();
         
         return await GetGymClassById(gymClass.Id) ?? throw new Exception("Error retrieving added class");
     }

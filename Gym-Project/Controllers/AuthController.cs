@@ -15,12 +15,14 @@ public class AuthController : ControllerBase
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly IConfiguration _configuration;
+    private readonly IWebHostEnvironment _environment;
 
-    public AuthController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration)
+    public AuthController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IConfiguration configuration, IWebHostEnvironment environment)
     {
         _userManager = userManager;
         _roleManager = roleManager;
         _configuration = configuration;
+        _environment = environment;
     }
 
     [HttpPost("register")]
@@ -40,28 +42,17 @@ public class AuthController : ControllerBase
         var result = await _userManager.CreateAsync(user, model.HashedPassword);
         if (result.Succeeded)
         {
-            // Ensure roles exist
+            // Ensure the Member role exists and assign it to every new user
             if (!await _roleManager.RoleExistsAsync("Member"))
                 await _roleManager.CreateAsync(new IdentityRole("Member"));
-            if (!await _roleManager.RoleExistsAsync("Admin"))
-                await _roleManager.CreateAsync(new IdentityRole("Admin"));
-            if (!await _roleManager.RoleExistsAsync("Trainer"))
-                await _roleManager.CreateAsync(new IdentityRole("Trainer"));
 
-            // Assign default role
-            if (model.Email.ToLower() == "admin@test.com")
-            {
-                await _userManager.AddToRoleAsync(user, "Admin");
-            }
-            else
-            {
-                await _userManager.AddToRoleAsync(user, "Member");
-            }
+            await _userManager.AddToRoleAsync(user, "Member");
 
             var token = await GenerateJwtToken(user);
             SetTokenCookie(token);
 
-            return Ok(new { Message = "User registered successfully", Token = token });
+            var roles = await _userManager.GetRolesAsync(user);
+            return Ok(new { Message = "User registered successfully", Token = token, Roles = roles });
         }
         return BadRequest(result.Errors);
     }
@@ -77,7 +68,7 @@ public class AuthController : ControllerBase
             return BadRequest(new { Message = "Invalid email or password" });
         }
 
-        var isPasswordValid = await _userManager.CheckPasswordAsync(user, model.HashedPassword);
+        var isPasswordValid = await _userManager.CheckPasswordAsync(user, model.Password);
         if (!isPasswordValid)
         {
             return BadRequest(new { Message = "Invalid email or password" });
@@ -85,8 +76,9 @@ public class AuthController : ControllerBase
 
         var token = await GenerateJwtToken(user);
         SetTokenCookie(token);
-        
-        return Ok(new { Message = "Login successful", Token = token });
+
+        var roles = await _userManager.GetRolesAsync(user);
+        return Ok(new { Message = "Login successful", Token = token, Roles = roles });
     }
 
     private async Task<string> GenerateJwtToken(ApplicationUser user)
@@ -123,8 +115,8 @@ public class AuthController : ControllerBase
         Response.Cookies.Append("jwt", token, new CookieOptions
         {
             HttpOnly = true,
-            Secure = true,
-            SameSite = SameSiteMode.Strict,
+            Secure = !_environment.IsDevelopment(),
+            SameSite = SameSiteMode.Lax,
             Expires = DateTimeOffset.UtcNow.AddHours(1)
         });
     }

@@ -34,6 +34,7 @@ public class EnrollmentService : IEnrollmentService
             .Where(e => e.UserId == userId && e.GymClassId == gymClassId)
             .Include(e => e.User)
             .Include(e => e.GymClass)
+            .ThenInclude(c => c.Trainer)
             .AsNoTracking()
             .Select(e => new ClassEnrollmentDTO
             {
@@ -41,6 +42,8 @@ public class EnrollmentService : IEnrollmentService
                 UserName = e.User.UserName!,
                 GymClassId = e.GymClassId,
                 GymClassTitle = e.GymClass.Title ?? string.Empty,
+                DurationInMinutes = e.GymClass.DurationInMinutes,
+                TrainerName = e.GymClass.Trainer.Name ?? "N/A",
                 EnrollmentDate = e.EnrollmentDate
             }).FirstOrDefaultAsync();
     }
@@ -51,6 +54,7 @@ public class EnrollmentService : IEnrollmentService
             .Where(e => e.UserId == userId)
             .Include(e => e.User)
             .Include(e => e.GymClass)
+            .ThenInclude(c => c.Trainer)
             .AsNoTracking()
             .Select(e => new ClassEnrollmentDTO
             {
@@ -58,7 +62,19 @@ public class EnrollmentService : IEnrollmentService
                 UserName = e.User.UserName!,
                 GymClassId = e.GymClassId,
                 GymClassTitle = e.GymClass.Title ?? string.Empty,
+                DurationInMinutes = e.GymClass.DurationInMinutes,
+                TrainerName = e.GymClass.Trainer.Name ?? "N/A",
                 EnrollmentDate = e.EnrollmentDate
             }).ToListAsync();
+    }
+
+    public async Task<bool> UnenrollUser(string userId, int gymClassId)
+    {
+        var enrollment = await _context.ClassEnrollments.FirstOrDefaultAsync(e => e.UserId == userId && e.GymClassId == gymClassId);
+        if (enrollment == null) return false;
+
+        _context.ClassEnrollments.Remove(enrollment);
+        await _context.SaveChangesAsync();
+        return true;
     }
 }

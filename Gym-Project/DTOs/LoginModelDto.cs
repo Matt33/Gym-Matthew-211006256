@@ -8,7 +8,7 @@ namespace GymProject.DTOs
         [EmailAddress]
         public string Email { get; set; }
         [Required]
-        public string HashedPassword { get; set; }
+        public string Password { get; set; }
 
         [Phone]
         public string? PhoneNumber { get; set; }

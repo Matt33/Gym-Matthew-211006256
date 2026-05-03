@@ -10,7 +10,7 @@ public class GymClass
     [StringLength(200)]
     public string? Title { get; set; }
     
-    public required Trainer Trainer { get; set; }
+    public Trainer? Trainer { get; set; }
     
     public int DurationInMinutes { get; set; }
     

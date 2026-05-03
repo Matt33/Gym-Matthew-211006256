@@ -17,6 +17,7 @@ public class EnrollmentController : ControllerBase
     }
 
     [HttpPost("{gymClassId}")]
+    [Authorize(Roles = "Member")]
     public async Task<IActionResult> EnrollInClass(int gymClassId)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -39,5 +40,18 @@ public class EnrollmentController : ControllerBase
 
         var enrollments = await _enrollmentService.GetUserEnrollments(userId);
         return Ok(enrollments);
+    }
+
+    [HttpDelete("{gymClassId}")]
+    [Authorize(Roles = "Member")]
+    public async Task<IActionResult> Unenroll(int gymClassId)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+        var success = await _enrollmentService.UnenrollUser(userId, gymClassId);
+        if (!success) return NotFound(new { Message = "Enrollment not found." });
+
+        return NoContent();
     }
 }

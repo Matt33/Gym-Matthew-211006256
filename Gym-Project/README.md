@@ -2,7 +2,11 @@
 
 This is a comprehensive Web API for a Gym Management System, built as the foundation for a university course project.
 
+This repository also contains a **React frontend** (Vite + React Router + Axios) located at `frontend/` that integrates with the API.
+
 ## How to Run the Project
+
+## Backend (ASP.NET Core API)
 
 1. **Pre-requisites:** 
    - Ensure you have the [.NET 8 SDK](https://dotnet.microsoft.com/download) (or later) installed.
@@ -14,6 +18,24 @@ This is a comprehensive Web API for a Gym Management System, built as the founda
 3. **Execution:**
    - Run the API with: `dotnet run`
    - Navigate to the **Swagger UI** (found at `http://localhost:<port>/swagger` or via your browser launch settings) to interact with the API endpoints.
+
+By default (see `Properties/launchSettings.json`), the API runs on:
+
+- `http://localhost:5108`
+- `https://localhost:7196`
+
+## Frontend (React + Axios)
+
+1. **Pre-requisites:**
+   - Node.js + npm installed
+2. **Install dependencies:**
+   - In the `frontend/` folder run: `npm install`
+3. **(Optional) Configure API base URL:**
+   - Create `frontend/.env` and set:
+     - `VITE_API_BASE_URL=http://localhost:5108`
+4. **Run the dev server:**
+   - In the `frontend/` folder run: `npm run dev`
+   - Open the shown URL (usually `http://localhost:5173`)
 
 ## Technologies Used
 
